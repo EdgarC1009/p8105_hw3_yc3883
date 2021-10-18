@@ -1,0 +1,35 @@
+---
+title: "P8105_HW3"
+author: Yijia Chen
+date: 2021-10-17
+output: github_document
+---
+
+```{r, message = FALSE}
+library(tidyverse)
+```
+
+# Problem 1
+
+```{r}
+library(p8105.datasets)
+data("instacart")
+
+numaisle_df = 
+  instacart %>% 
+  janitor::clean_names() %>% 
+  count(aisle, name = "n_obs")
+
+numaisle1_df = 
+  numaisle_df %>% 
+  filter(n_obs > 10000) %>% 
+  ggplot(aes(x = aisle, y = n_obs)) +
+  geom_point() + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.4, hjust = 1))
+
+popitem_df = 
+  instacart %>% 
+  janitor::clean_names() %>% 
+  group_by(product_name, aisle)
+```
+
