@@ -148,11 +148,59 @@ health_dis =
     locationabbr %in% "NY",
     year %in% c(2006, 2010)
     ) %>% 
-  select(year, locationdesc, response, data_value) %>% 
+  select(year, locationabbr, response, data_value) %>% 
   drop_na(data_value) %>% 
   ggplot(aes(x = response, y = data_value)) +
-  geom_point() +
-  facet_grid(locationdesc ~ year) +
+  geom_boxplot() +
+  facet_grid(. ~ year) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.4, hjust = 1))
+```
+
+# Problem 3
+## Problem 3(a)
+Load, tidy, and otherwise wrangle the data. Your final dataset should include all originally observed variables and values; have useful variable names; include a weekday vs weekend variable; and encode data with reasonable variable classes. Describe the resulting dataset
+```{r}
+accel_df = 
+  read.csv("data/accel_data.csv") %>% 
+  janitor::clean_names() %>% 
+  pivot_longer(
+    activity_1:activity_1440,
+    names_to = "min",
+    names_prefix = "activity_",
+    values_to = "activity"
+  ) %>% 
+  mutate(
+    min = as.numeric(min),
+    day = factor(day, levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")),
+    weekend = as.numeric(day %in% c("Saturday", "Sunday"))
+  ) 
+```
+
+## Problem 3(b)
+Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate accross minutes to create a total activity variable for each day, and create a table showing these totals. Are any trends apparent?
+```{r}
+accelto_df = 
+  accel_df %>% 
+  group_by(week, day) %>% 
+  summarize(
+    total_act = sum(activity)
+  ) %>% 
+  pivot_wider(
+    names_from = "day",
+    values_from = "total_act"
+  ) %>% 
+  knitr::kable()
+```
+
+## Problem 3(c)
+Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph
+
+```{r}
+accelplot_df = 
+  accel_df %>% 
+  group_by(week, day) %>% 
+  ggplot(aes(x = min, y = activity, color = day)) +
+  geom_line(alpha = .3) +
+  geom_smooth()
 ```
 
