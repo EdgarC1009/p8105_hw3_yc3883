@@ -20,7 +20,10 @@ data("instacart")
 numaisle_df = 
   instacart %>% 
   janitor::clean_names() %>% 
-  count(aisle, name = "n_items")
+  count(aisle, name = "n_items") %>% 
+  mutate(
+    aisle_rank = min_rank(desc(n_items))
+  )
 
 numaisle_df %>% 
   filter(n_items > 10000) %>% 
@@ -31,14 +34,17 @@ numaisle_df %>%
   geom_point() + 
   theme(axis.text.x = element_text(angle = 90, vjust = 0.4, hjust = 1))
 
-
 ```
+The dimension of the "instacart" dataset is `r dim(instacart)`. The number of observation is `r nrow(instacart)`. All variables in this dataset are `r names(instacart)`. "reordered" means if this prodcut has been ordered by this user in the past; 1 represents "YES" while 0 represents "NO". "order_dow" means the day of the week on which the order was placed. For example, the first observation is ordered by customer "112108" on the 4th day of the week; the placing hour of this order is 10. The product is "Bulgarian Yogurt" coming from "yogurt" aisle and "dairy eggs" department.
+
+The number of aisle is `r count(numaisle_df, "aisle")`. Aisle that is the most itmes ordered from is `r filter(numaisle_df, aisle_rank == 1)`
+
 
 ## Problem 1 (b)
 Make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.
 
 ```{r}
-popitem_df = 
+popitem_tb = 
   instacart %>% 
   janitor::clean_names() %>% 
   group_by(aisle, product_name) %>% 
@@ -49,13 +55,15 @@ popitem_df =
   ) %>% 
   filter(ord_rank < 4) %>% 
   knitr::kable()
+
+popitem_tb
 ```
 
 ## Problem 1 (c)
 Make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table).
 
 ```{r}
-meanh_df = 
+meanh_tb = 
   instacart %>% 
   janitor::clean_names() %>% 
   group_by(product_name, order_dow) %>% 
@@ -68,7 +76,8 @@ meanh_df =
     values_from = "mean_hod",
   ) %>% 
   knitr::kable()
-### need to indicate day (from number 0-6 to day)
+
+meanh_tb
 ```
 
 # Problem 2 
@@ -100,31 +109,38 @@ brfss_df =
 
 Using this dataset, do or answer the following (commenting on the results of each):
 
-1. In 2002, which states were observed at 7 or more locations? What about in 2010?;
-2. Construct a dataset that is limited to Excellent responses, and contains, year, state, and a variable that averages the data_value across locations within a state. Make a “spaghetti” plot of this average value over time within a state (that is, make a plot showing a line for each state across years – the geom_line geometry and group aesthetic will help).;
-3. Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State.
+In 2002, which states were observed at 7 or more locations? What about in 2010?
 
 ```{r}
 health_02 = 
   brfss_df %>% 
   select(year, locationabbr, locationdesc) %>% 
   group_by(year, locationabbr) %>% 
-  summarize(n_loc = n()) %>% 
+  summarize(n_loc = n_distinct(locationdesc)) %>% 
   filter(
     year == 2002,
     n_loc > 6
     )
 
+health_02    #The states that were observed at 7 or more locations in 2002
+
 health_10 = 
   brfss_df %>% 
   select(year, locationabbr, locationdesc) %>% 
   group_by(year, locationabbr) %>% 
-  summarize(n_loc = n()) %>% 
+  summarize(n_loc = n_distinct(locationdesc)) %>% 
   filter(
     year == 2010,
     n_loc > 6
     )
 
+health_10    #The states that were observed at 7 or more locations in 2010
+```
+
+## Problem 2 (c)
+Construct a dataset that is limited to Excellent responses, and contains, year, state, and a variable that averages the data_value across locations within a state. Make a “spaghetti” plot of this average value over time within a state (that is, make a plot showing a line for each state across years)
+
+```{r}
 health_exc = 
   brfss_df %>% 
   filter(response == "Excellent") %>% 
@@ -142,6 +158,13 @@ health_exc =
   ) +
   theme(legend.position = "bottom")
 
+health_exc
+```
+
+## Problem 2 (d)
+Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State.
+
+```{r}
 health_dis =
   brfss_df %>% 
   filter(
@@ -154,10 +177,12 @@ health_dis =
   geom_boxplot() +
   facet_grid(. ~ year) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.4, hjust = 1))
+
+health_dis
 ```
 
 # Problem 3
-## Problem 3(a)
+## Problem 3 (a)
 Load, tidy, and otherwise wrangle the data. Your final dataset should include all originally observed variables and values; have useful variable names; include a weekday vs weekend variable; and encode data with reasonable variable classes. Describe the resulting dataset
 ```{r}
 accel_df = 
@@ -175,11 +200,13 @@ accel_df =
     weekend = as.numeric(day %in% c("Saturday", "Sunday"))
   ) 
 ```
+The dimension of the "accel_df" dataset is `r dim(accel_df)`. The number of observation is `r nrow(accel_df)`. All variables in this dataset are `r names(accel_df)`. "min" means the the activities are recorded at what minute of the day.
 
-## Problem 3(b)
+
+## Problem 3 (b)
 Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate accross minutes to create a total activity variable for each day, and create a table showing these totals. Are any trends apparent?
 ```{r}
-accelto_df = 
+accelto_tb = 
   accel_df %>% 
   group_by(week, day) %>% 
   summarize(
@@ -190,17 +217,23 @@ accelto_df =
     values_from = "total_act"
   ) %>% 
   knitr::kable()
-```
 
-## Problem 3(c)
+accelto_tb
+```
+There is no apparent trends
+
+
+## Problem 3 (c)
 Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph
 
 ```{r}
-accelplot_df = 
+accelplot = 
   accel_df %>% 
   group_by(week, day) %>% 
   ggplot(aes(x = min, y = activity, color = day)) +
   geom_line(alpha = .3) +
   geom_smooth()
-```
 
+accelplot
+```
+Activity of patient usually begin at 4am and end at the end of the day. He is super active in the Sunday morning and at Friday night. At Sunday's and Tuesday's night, he is less active than the other days. 
