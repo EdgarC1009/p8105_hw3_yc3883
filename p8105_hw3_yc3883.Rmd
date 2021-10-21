@@ -69,7 +69,7 @@ popitem_tb =
     ord_rank = min_rank(desc(n_ord))
   ) %>% 
   filter(ord_rank < 4) %>% 
-  knitr::kable()
+  knitr::kable(caption = "Three most popular items in each of the aisles")
 
 popitem_tb
 ```
@@ -90,7 +90,7 @@ meanh_tb =
     names_from = "order_dow",
     values_from = "mean_hod",
   ) %>% 
-  knitr::kable()
+  knitr::kable(caption = "The mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week")
 
 meanh_tb
 ```
@@ -169,7 +169,7 @@ health_exc =
   geom_line() +  
   labs(
     title = "Average data_value for each state across years",
-    y = "Data Value",
+    y = "Average Data Value",
     x = "year",
     caption = "Data from BRFSS datasets"
   ) +
@@ -195,7 +195,13 @@ health_dis =
   drop_na(data_value) %>% 
   ggplot(aes(x = response, y = data_value)) +
   geom_boxplot() +
-  facet_grid(. ~ year) +
+  facet_grid(. ~ year) + 
+  labs(
+    title = "Distribution of data_value for responses for 2006 and 2010",
+    y = "Data value",
+    x = "Response",
+    caption = "Data from BRFSS datasets"
+  ) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.4, hjust = 1))
 
 health_dis
@@ -237,7 +243,7 @@ accelto_tb =
     names_from = "day",
     values_from = "total_act"
   ) %>% 
-  knitr::kable()
+  knitr::kable(caption = "Total activity over the day")
 
 accelto_tb
 ```
@@ -255,6 +261,11 @@ accelplot =
   ggplot(aes(x = min, y = activity, color = day)) +
   geom_line(alpha = .3) +
   geom_smooth() +
+  labs(
+    title = "24-hour activity time courses for each day for the patient",
+    y = "Minute of the day",
+    x = "Activity",
+  ) +
   theme(legend.position = "bottom")
 
 accelplot
